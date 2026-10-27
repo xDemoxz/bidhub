@@ -20,6 +20,9 @@ export function Countdown({ endsAt, className = "" }: { endsAt: string; classNam
   const refreshed = useRef(false);
 
   useEffect(() => {
+    // Intencional: el reloj arranca en null para que servidor y cliente rendericen
+    // lo mismo (sin error de hidratación) y se llena apenas monta el componente.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setNow(Date.now());
     const timer = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(timer);

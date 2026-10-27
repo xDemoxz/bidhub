@@ -36,6 +36,8 @@ export function AdminPanel() {
   }, [toMessage]);
 
   useEffect(() => {
+    // Carga inicial desde la API al montar (intencional).
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     void load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

@@ -30,6 +30,8 @@ export function RegisterForm() {
           password: form.get("password"),
         },
       });
+      // Recarga completa a propósito: así los layouts del servidor leen la sesión nueva.
+      // eslint-disable-next-line @next/next/no-location-assign-relative-destination
       window.location.assign(`/${locale}/dashboard`);
     } catch (caught) {
       setError(toMessage(caught));
