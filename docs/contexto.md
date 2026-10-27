@@ -207,18 +207,16 @@
 | Fecha | Decisión | Por qué |
 |---|---|---|
 | 2026-10-27 | El gist de BidHub es la fuente de verdad del alcance y del criterio de evaluación | Es el enunciado oficial del simulacro |
-
-> Las propuestas de las secciones 4 y 13 se agregan aquí cuando las apruebes.
+| 2026-10-27 | Modo **efectivo** para toda la epic | Se necesita el proyecto listo como base de la prueba |
+| 2026-10-27 | Excepción: comentarios explicativos en el código, con marcas `REGLA N:` y `ADAPTAR:` | Servirán de guía para adaptar la base a la lógica nueva de la prueba |
+| 2026-10-27 | Stack: Prisma, Zod, jose (JWT), bcryptjs, next-intl, Tailwind | Aprobado ("procede") |
+| 2026-10-27 | Regla 11: se suman 5 min al cierre vigente | Propuesta aceptada |
+| 2026-10-27 | Home estática (SSG) con categorías; imágenes por URL externa | Propuesta aceptada |
+| 2026-10-27 | Alias del postor `An***`; sin paginación en el MVP (límite 100) | Propuesta aceptada |
+| 2026-10-27 | Sin Jira: solo Git con commits convencionales en español (main, develop, feat/*) | Indicación del usuario |
+| 2026-10-27 | Mantener Prisma aunque no se pudo verificar `migrate` en el entorno de desarrollo | Decisión del usuario |
 
 ## 13. Estado actual
-- **Última sesión:** 2026-10-27, se llenó esta plantilla a partir del gist.
-- **Próximo paso:** confirmar los puntos **[Por confirmar]** y las decisiones de abajo; luego fase 3 (cerrar stack) y fase 4 (DER).
-- **Pendientes y bloqueos, decisiones que requieren tu respuesta:**
-  1. **Modo de trabajo:** ensamble (recomendado) / apoyo / efectivo, y si lo tratamos como epic.
-  2. **Ambigüedad de la regla 11:** "extender 5 minutos más" ¿se suma al cierre actual (cierre + 5 min) o se reinicia a ahora + 5 min? Propuesta: sumar 5 min al cierre actual.
-  3. **Home en SSG:** ¿solo contenido estático (hero, categorías) o también subastas destacadas? Con datos, habría que usar revalidación periódica. Propuesta: Home estático con categorías, y lo dinámico queda en el catálogo (SSR).
-  4. **Imágenes de artículos:** ¿URL externa (simple, requiere configurar dominios en `next/image`) o subida a Supabase Storage (más trabajo)? Propuesta: URL externa en el MVP.
-  5. **ORM:** ¿Prisma? Y hash: ¿bcrypt o argon2?
-  6. **Alias del postor (regla 18):** formato propuesto: primeras letras del nombre + asteriscos (ej. `Jo***`).
-  7. **Paginación del catálogo:** no la exige el enunciado; propuesta: dejarla fuera del MVP.
-  8. **Datos de entrega:** fecha, tiempo disponible, idioma de commits, Jira y tu nivel por tecnología.
+- **Última sesión:** 2026-10-27, MVP completo (modelo, reglas, auth, API, interfaz, Docker, README, notas).
+- **Próximo paso:** en tu máquina, verificar con `npm run db:migrate` que no haya diferencias con la migración escrita a mano, construir la imagen Docker y desplegar (Vercel + Supabase).
+- **Pendientes:** despliegue, extras (rate limiting de login y ofertas, idempotencia de ofertas, CI), edición de subastas en la UI y paginación.

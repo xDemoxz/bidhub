@@ -1,36 +1,95 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# BidHub
 
-## Getting Started
+Plataforma de subastas en línea hecha con Next.js 16 (App Router), TypeScript,
+Prisma y PostgreSQL. Los usuarios publican artículos, ofertan en tiempo real
+y el sistema aplica 20 reglas de negocio (incremento mínimo, extensión del
+cierre en los últimos minutos, cancelaciones, moderación de administrador, etc.).
 
-First, run the development server:
+## 1. Descripción
+
+- **Público:** Home estática (SSG), catálogo con filtros y detalle de subasta (SSR).
+- **Usuario:** registro, login, publicar subastas, ofertar, panel con sus subastas y ofertas.
+- **Administrador:** cancelar subastas con motivo y gestionar categorías.
+- **Idiomas:** español e inglés (`/es`, `/en`).
+- El estado de una subasta (activa, cerrada, desierta, cancelada) **se calcula**, no se guarda.
+
+## 2. Prerrequisitos
+
+- Node.js 22 o superior y npm
+- PostgreSQL (local o [Supabase](https://supabase.com))
+- Docker (opcional, solo para la imagen de producción)
+
+## 3. Variables de entorno
+
+Copia `.env.example` a `.env` y completa:
+
+| Variable | Qué es |
+|---|---|
+| `DATABASE_URL` | Cadena de conexión de PostgreSQL. En Supabase: *Project Settings > Database > Connection string > Session pooler* (puerto 5432). |
+| `JWT_ACCESS_SECRET` | Secreto del token de acceso (32+ caracteres). Genera con `openssl rand -base64 48`. |
+| `JWT_REFRESH_SECRET` | Secreto del refresh token. Debe ser **distinto** al anterior. |
+| `ACCESS_TOKEN_EXPIRES_IN` | Duración del access token. Por defecto `15m`. |
+| `REFRESH_TOKEN_EXPIRES_IN` | Duración del refresh token. Por defecto `7d`. |
+| `SEED_ADMIN_EMAIL` / `SEED_ADMIN_PASSWORD` | Credenciales del administrador que crea el seed. |
+
+## 4. Puesta en marcha (en este orden)
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install            # instala dependencias y genera el cliente de Prisma
+cp .env.example .env   # luego edita los valores
+npm run db:migrate     # crea las tablas (en producción: npm run db:deploy)
+npm run db:seed        # crea admin, usuarios, categorías y subastas de ejemplo
+npm run dev            # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 5. Credenciales de ejemplo (seed)
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+| Rol | Correo | Contraseña |
+|---|---|---|
+| Administrador | `admin@bidhub.com` | `Admin1234!` (o lo que pongas en `.env`) |
+| Usuarios | `ana@bidhub.com`, `luis@bidhub.com`, `marta@bidhub.com` | `User1234!` |
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 6. Docker
 
-## Learn More
+```bash
+docker build -t bidhub .
+docker run -p 3000:3000 --env-file .env bidhub
+```
 
-To learn more about Next.js, take a look at the following resources:
+La imagen es multi-etapa y no corre como root. Las migraciones se aplican
+aparte con `npm run db:deploy`.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 7. Scripts
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+| Script | Función |
+|---|---|
+| `npm run dev` / `build` / `start` | Desarrollo, compilación y producción |
+| `npm run lint` / `typecheck` | ESLint y TypeScript |
+| `npm test` | Pruebas unitarias de las reglas de negocio |
+| `RUN_DB_TESTS=1 npm test` | Incluye pruebas de integración contra la base (usa `DATABASE_URL`, **borra datos**) |
+| `npm run db:migrate` / `db:deploy` / `db:seed` / `db:reset` | Base de datos |
 
-## Deploy on Vercel
+## 8. Estructura
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```
+prisma/            esquema, migraciones y seed
+messages/          textos es.json / en.json
+src/proxy.ts       i18n + protección de rutas + renovación de sesión
+src/app/[locale]/  páginas: (public) (auth) (private) (admin)
+src/app/api/       route handlers REST
+src/components/    componentes de interfaz
+src/server/domain/ reglas de negocio puras (con pruebas)
+src/server/services/ casos de uso con transacciones
+src/server/auth/   JWT, cookies, sesión
+docs/              DER, contexto, notas de aprendizaje y guía de adaptación
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 9. Documentación
+
+- [DER y decisiones del modelo](docs/der.md)
+- [Guía de adaptación: "si cambia X, edita Y"](docs/adaptacion.md)
+- [Notas de aprendizaje](docs/aprendizaje/00-resumen-epic.md)
+
+## 10. Despliegue
+
+URL desplegada: _pendiente (Vercel + Supabase)_.
