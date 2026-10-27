@@ -11,6 +11,8 @@ export function LogoutButton() {
   async function logout() {
     await apiFetch("/api/auth/logout", { method: "POST" }).catch(() => undefined);
     // Recarga completa para que ninguna página conserve datos de la sesión anterior.
+    // Recarga completa a propósito: así los layouts del servidor leen la sesión nueva.
+    // eslint-disable-next-line @next/next/no-location-assign-relative-destination
     window.location.assign(`/${locale}`);
   }
 
