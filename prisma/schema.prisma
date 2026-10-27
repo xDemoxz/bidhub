@@ -1,0 +1,118 @@
+// Esquema de BidHub. Ver el diagrama y las decisiones en docs/der.md.
+//
+// ADAPTAR: si la prueba nueva trae otras entidades, este es el primer archivo
+// que se toca. Después: `npx prisma migrate dev --name <cambio>` y ajustar
+// el seed (prisma/seed.ts) y los servicios en src/server/services.
+
+generator client {
+  provider = "prisma-client"
+  // Prisma 7 genera el cliente dentro del proyecto (no en node_modules).
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  // La URL de conexión NO va aquí en Prisma 7: vive en prisma.config.ts
+  // (para la CLI) y en src/server/db.ts (para la app, vía adaptador).
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+model User {
+  id           String   @id @default(uuid())
+  name         String
+  email        String   @unique
+  // Nunca se guarda la contraseña en claro: solo el hash de bcrypt (T9).
+  passwordHash String
+  // El rol ADMIN solo se crea desde el seed, nunca desde el registro público.
+  role         Role     @default(USER)
+  createdAt    DateTime @default(now())
+
+  auctions         Auction[]      @relation("AuctionSeller")
+  cancelledAuction Auction[]      @relation("AuctionCancelledBy")
+  bids             Bid[]
+  refreshTokens    RefreshToken[]
+}
+
+model Category {
+  id   String @id @default(uuid())
+  name String @unique
+
+  auctions Auction[]
+}
+
+model Auction {
+  id          String  @id @default(uuid())
+  title       String
+  description String
+  // URL externa de la imagen; se muestra con next/image (T13).
+  imageUrl    String
+
+  // REGLA 1: ambos valores deben ser mayores a cero (se valida en el servicio).
+  // Decimal y no Float: el dinero no puede tener errores de redondeo.
+  startingPrice Decimal @db.Decimal(12, 2)
+  minIncrement  Decimal @db.Decimal(12, 2)
+
+  // Cierre VIGENTE de la subasta. REGLA 11: una oferta de último minuto lo
+  // mueve hacia adelante, por eso no se llama "closesAt" fijo.
+  endsAt    DateTime
+  createdAt DateTime @default(now())
+
+  // REGLAS 12 y 13: el estado NO es una columna. Solo se guarda la
+  // cancelación; activa/cerrada/desierta se calculan en
+  // src/server/domain/auction-status.ts
+  cancelledAt   DateTime?
+  // REGLA 15: el motivo es obligatorio cuando cancela un administrador.
+  cancelReason  String?
+  cancelledById String?
+  cancelledBy   User?     @relation("AuctionCancelledBy", fields: [cancelledById], references: [id])
+
+  sellerId String
+  seller   User   @relation("AuctionSeller", fields: [sellerId], references: [id])
+
+  // REGLA 17: Restrict impide borrar una categoría que tenga subastas.
+  categoryId String
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+
+  bids Bid[]
+
+  @@index([endsAt])
+  @@index([sellerId])
+  @@index([categoryId])
+}
+
+// REGLA 10: las ofertas son inmutables. No hay update ni delete de Bid en
+// ningún servicio.
+model Bid {
+  id        String   @id @default(uuid())
+  amount    Decimal  @db.Decimal(12, 2)
+  createdAt DateTime @default(now())
+
+  auctionId String
+  auction   Auction @relation(fields: [auctionId], references: [id])
+
+  bidderId String
+  bidder   User   @relation(fields: [bidderId], references: [id])
+
+  // Sirve para obtener rápido la oferta más alta de una subasta.
+  @@index([auctionId, amount])
+  @@index([bidderId])
+}
+
+model RefreshToken {
+  id        String    @id @default(uuid())
+  // Se guarda el hash (SHA-256) del token, nunca el token en claro (T9).
+  tokenHash String    @unique
+  expiresAt DateTime
+  // Logout y rotación lo marcan como revocado en lugar de borrarlo.
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
