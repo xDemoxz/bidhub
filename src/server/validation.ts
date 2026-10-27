@@ -9,6 +9,9 @@ import { Prisma } from "@/generated/prisma/client";
 import { AUCTION_STATUSES } from "@/server/domain/auction-status";
 import { badRequest } from "@/server/errors";
 
+// Mensajes de error de Zod en español (los que no definimos a mano).
+z.config(z.locales.es());
+
 // Acepta 10, "10", "10.5" o "10.50" (máx. 2 decimales) y lo vuelve Decimal.
 const money = z
   .union([z.string(), z.number()])
